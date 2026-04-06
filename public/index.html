@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>안심길 — 교통약자 안전지도</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- 카카오맵 SDK: YOUR_KAKAO_KEY 를 발급받은 키로 교체하세요 -->
+  <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_KEY&libraries=services"></script>
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #00d4aa;
+      --accent2: #ff6b6b;
+      --accent3: #ffd93d;
+      --text: #e6edf3;
+      --text-muted: #7d8590;
+      --safe: #00d4aa;
+      --warn: #ffd93d;
+      --danger: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── 상단 헤더 ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(0, 212, 170, 0.1);
+      border: 1px solid rgba(0, 212, 170, 0.3);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* ── 메인 레이아웃 ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── 사이드패널 ── */
+    .sidebar {
+      width: 360px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* 검색바 */
+    .search-bar {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-input-wrap {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px 10px 40px;
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 13px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    /* 필터 탭 */
+    .filter-tabs {
+      display: flex;
+      padding: 12px 16px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .filter-tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(0, 212, 170, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .tab-btn:hover:not(.active) {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+
+    /* 카드 리스트 */
+    .card-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 4px 0 2px;
+    }
+
+    .card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+
+    .card.safe::before { background: var(--safe); }
+    .card.warn::before { background: var(--warn); }
+    .card.danger::before { background: var(--danger); }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .card-type {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-icon {
+      font-size: 16px;
+    }
+
+    .card-type-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .status-badge.safe {
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--safe);
+    }
+
+    .status-badge.warn {
+      background: rgba(255, 217, 61, 0.15);
+      color: var(--warn);
+    }
+
+    .status-badge.danger {
+      background: rgba(255, 107, 107, 0.15);
+      color: var(--danger);
+    }
+
+    .card-name {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .card-detail {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-detail span {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* 통계 바 */
+    .stats-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .stat-item {
+      flex: 1;
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .stat-num.safe { color: var(--safe); }
+    .stat-num.warn { color: var(--warn); }
+    .stat-num.danger { color: var(--danger); }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* ── 지도 영역 ── */
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      background: var(--bg);
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 지도 위 오버레이 통계 */
+    .map-overlay {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .overlay-card {
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      backdrop-filter: blur(10px);
+      min-width: 160px;
+    }
+
+    .overlay-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .overlay-stats {
+      display: flex;
+      gap: 12px;
+    }
+
+    .overlay-stat {
+      text-align: center;
+    }
+
+    .overlay-stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .overlay-stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* 지도 하단 범례 */
+    .map-legend {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: rgba(22, 27, 34, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 10px 20px;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    /* 상세 패널 */
+    .detail-panel {
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      width: min(480px, 90vw);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .detail-panel.show {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .detail-close {
+      position: absolute;
+      top: 14px; right: 14px;
+      background: var(--surface2);
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      font-size: 16px;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .detail-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .detail-item {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .detail-item-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .detail-item-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .map-overlay {
+        top: 10px;
+        right: 10px;
+      }
+
+      .overlay-card {
+        padding: 8px 12px;
+        min-width: 130px;
+      }
+    }
+
+    /* 로딩 */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 16px;
+      transition: opacity 0.5s;
+    }
+
+    .loading-overlay.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .loading-bar {
+      width: 200px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .loading-progress {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      animation: load 1.8s ease forwards;
+    }
+
+    @keyframes load {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* 빈 지도 배경 */
+    .map-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: var(--bg);
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .map-placeholder-text {
+      font-family: 'Space Mono', monospace;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .map-placeholder-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    .api-notice {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(22, 27, 34, 0.95);
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      padding: 24px 28px;
+      text-align: center;
+      z-index: 5;
+      max-width: 320px;
+    }
+
+    .api-notice h3 {
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .api-notice p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    code {
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+<!-- 로딩 -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-logo">안심길</div>
+  <div class="loading-bar"><div class="loading-progress"></div></div>
+  <div class="loading-text">실시간 데이터 불러오는 중...</div>
+</div>
+
+<!-- 헤더 -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🦽</div>
+    <div>
+      <div class="logo-text">안심길</div>
+      <div class="logo-sub">교통약자 실시간 안전지도</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+  </div>
+</header>
+
+<!-- 메인 -->
+<div class="main">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <!-- 검색 -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" placeholder="동네, 주소 검색..." id="searchInput" />
+      </div>
+    </div>
+
+    <!-- 필터 탭 -->
+    <div class="filter-tabs">
+      <button class="tab-btn active" data-filter="all" onclick="filterCards('all', this)">🗺️ 전체</button>
+      <button class="tab-btn" data-filter="transport" onclick="filterCards('transport', this)">🦽 이동지원</button>
+      <button class="tab-btn" data-filter="signal" onclick="filterCards('signal', this)">🚦 신호등</button>
+      <button class="tab-btn" data-filter="bike" onclick="filterCards('bike', this)">🚲 공영자전거</button>
+    </div>
+
+    <!-- 카드 리스트 -->
+    <div class="card-list" id="cardList">
+      <!-- JS로 렌더링 -->
+    </div>
+  </aside>
+
+  <!-- 지도 -->
+  <div class="map-wrap">
+    <div id="map">
+      <!-- 카카오 API 키 미설정 시 안내 화면 -->
+      <div class="map-placeholder">
+        <div class="map-placeholder-icon">🗺️</div>
+        <div class="map-placeholder-text">
+          카카오맵 API 키를 설정하면<br>실시간 지도가 표시됩니다
+        </div>
+      </div>
+    </div>
+
+    <div class="api-notice" id="apiNotice">
+      <h3>🔑 API 키 설정 필요</h3>
+      <p>
+        <code>YOUR_KAKAO_KEY</code> 를<br>
+        발급받은 카카오맵 키로 교체하세요.<br><br>
+        공공데이터 API 키도<br>
+        <code>YOUR_DATA_API_KEY</code> 에<br>
+        입력해주세요.
+      </p>
+    </div>
+
+    <!-- 지도 위 통계 -->
+    <div class="map-overlay">
+      <div class="overlay-card">
+        <div class="overlay-title">🦽 이동지원 차량</div>
+        <div class="overlay-stats">
+          <div class="overlay-stat">
+            <div class="overlay-stat-num safe" id="statAvail">3</div>
+            <div class="overlay-stat-label">대기중</div>
+          </div>
+          <div class="overlay-stat">
+            <div class="overlay-stat-num warn" id="statRun">7</div>
+            <div class="overlay-stat-label">운행중</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay-card">
+        <div class="overlay-title">🚦 신호등 안전</div>
+        <div class="overlay-stats">
+          <div class="overlay-stat">
+            <div class="overlay-stat-num safe" id="statSafe">12</div>
+            <div class="overlay-stat-label">안전</div>
+          </div>
+          <div class="overlay-stat">
+            <div class="overlay-stat-num danger" id="statDanger">2</div>
+            <div class="overlay-stat-label">주의</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay-card">
+        <div class="overlay-title">🚲 공영자전거</div>
+        <div class="overlay-stats">
+          <div class="overlay-stat">
+            <div class="overlay-stat-num safe" id="statBike">28</div>
+            <div class="overlay-stat-label">대여가능</div>
+          </div>
+          <div class="overlay-stat">
+            <div class="overlay-stat-num warn" id="statDock">5</div>
+            <div class="overlay-stat-label">반납가능</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="map-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--safe)"></div>안전/대기
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--warn)"></div>운행중/혼잡
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--danger)"></div>주의/점검
+      </div>
+    </div>
+
+    <!-- 상세 패널 -->
+    <div class="detail-panel" id="detailPanel">
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+      <div class="detail-title" id="detailTitle">정보</div>
+      <div class="detail-sub" id="detailSub">상세 정보</div>
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// 설정: 여기에 API 키를 입력하세요
+// =============================================
+const CONFIG = {
+  KAKAO_KEY: 'YOUR_KAKAO_KEY',           // 카카오 개발자 콘솔
+  DATA_API_KEY: 'YOUR_DATA_API_KEY',     // data.go.kr 발급 키 (URL 인코딩된 값)
+};
+
+// =============================================
+// 목업 데이터 (API 연동 전 UI 확인용)
+// =============================================
+const MOCK_DATA = {
+  transport: [
+    { id: 't1', name: '강남구 복지콜 1호', status: 'safe', statusText: '대기중', detail1: '탑승 가능', detail2: '예상대기 3분', lat: 37.5172, lng: 127.0473, type: 'transport' },
+    { id: 't2', name: '서초구 복지콜 2호', status: 'warn', statusText: '운행중', detail1: '운행중 (복귀 15분)', detail2: '예약 가능', lat: 37.4940, lng: 127.0324, type: 'transport' },
+    { id: 't3', name: '송파구 복지콜 3호', status: 'danger', statusText: '점검중', detail1: '차량 점검중', detail2: '이용 불가', lat: 37.5145, lng: 127.1060, type: 'transport' },
+  ],
+  signal: [
+    { id: 's1', name: '강남대로 / 테헤란로 교차로', status: 'safe', statusText: '정상', detail1: '보행신호 30초', detail2: '음향신호 정상', lat: 37.5000, lng: 127.0300, type: 'signal' },
+    { id: 's2', name: '서초대로 / 반포대로 교차로', status: 'warn', statusText: '주의', detail1: '보행신호 짧음 (15초)', detail2: '음향신호 점검 필요', lat: 37.4960, lng: 127.0080, type: 'signal' },
+    { id: 's3', name: '올림픽대로 / 잠실교 교차로', status: 'danger', statusText: '위험', detail1: '신호등 오작동', detail2: '점검 요청됨', lat: 37.5130, lng: 127.0900, type: 'signal' },
+  ],
+  bike: [
+    { id: 'b1', name: '강남역 2번출구 앞', status: 'safe', statusText: '여유', detail1: '대여 가능 12대', detail2: '반납 가능 8대', lat: 37.4980, lng: 127.0280, type: 'bike' },
+    { id: 'b2', name: '선릉역 1번출구', status: 'warn', statusText: '혼잡', detail1: '대여 가능 2대', detail2: '반납 가능 1대', lat: 37.5040, lng: 127.0490, type: 'bike' },
+    { id: 'b3', name: '삼성역 6번출구', status: 'safe', statusText: '여유', detail1: '대여 가능 14대', detail2: '반납 가능 12대', lat: 37.5087, lng: 127.0630, type: 'bike' },
+  ],
+};
+
+const TYPE_META = {
+  transport: { icon: '🦽', label: '이동지원 차량' },
+  signal:    { icon: '🚦', label: '신호등' },
+  bike:      { icon: '🚲', label: '공영자전거' },
+};
+
+let currentFilter = 'all';
+let map = null;
+let markers = [];
+
+// ── 카드 렌더링 ──
+function getAllItems() {
+  return [...MOCK_DATA.transport, ...MOCK_DATA.signal, ...MOCK_DATA.bike];
+}
+
+function renderCards(filter = 'all') {
+  const list = document.getElementById('cardList');
+  list.innerHTML = '';
+
+  const sections = filter === 'all'
+    ? ['transport', 'signal', 'bike']
+    : [filter];
+
+  sections.forEach(type => {
+    const items = MOCK_DATA[type];
+    const meta = TYPE_META[type];
+
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = `${meta.icon} ${meta.label}`;
+    list.appendChild(label);
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = `card ${item.status}`;
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-type">
+            <span class="card-icon">${meta.icon}</span>
+            <span class="card-type-label">${meta.label.toUpperCase()}</span>
+          </div>
+          <span class="status-badge ${item.status}">${item.statusText}</span>
+        </div>
+        <div class="card-name">${item.name}</div>
+        <div class="card-detail">
+          <span>📍 ${item.detail1}</span>
+          <span>⏱ ${item.detail2}</span>
+        </div>
+      `;
+      card.onclick = () => showDetail(item);
+      list.appendChild(card);
+    });
+  });
+}
+
+// ── 필터 ──
+function filterCards(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards(filter);
+}
+
+// ── 상세 패널 ──
+function showDetail(item) {
+  const meta = TYPE_META[item.type];
+  document.getElementById('detailTitle').textContent = item.name;
+  document.getElementById('detailSub').textContent = `${meta.icon} ${meta.label} · ${item.statusText}`;
+
+  const grid = document.getElementById('detailGrid');
+
+  const detailMap = {
+    transport: [
+      { label: '차량 상태', value: item.statusText, color: item.status },
+      { label: '상세 정보', value: item.detail1, color: '' },
+      { label: '대기 시간', value: item.detail2, color: '' },
+      { label: '예약 가능', value: item.status === 'safe' ? '가능' : '불가', color: item.status === 'safe' ? 'safe' : 'danger' },
+    ],
+    signal: [
+      { label: '신호등 상태', value: item.statusText, color: item.status },
+      { label: '보행 신호', value: item.detail1, color: '' },
+      { label: '음향 신호', value: item.detail2, color: '' },
+      { label: '위험도', value: item.status === 'safe' ? '낮음' : item.status === 'warn' ? '보통' : '높음', color: item.status },
+    ],
+    bike: [
+      { label: '스테이션 상태', value: item.statusText, color: item.status },
+      { label: '대여 현황', value: item.detail1, color: '' },
+      { label: '반납 현황', value: item.detail2, color: '' },
+      { label: '접근성', value: '교통약자 이용 가능', color: 'safe' },
+    ],
+  };
+
+  const fields = detailMap[item.type];
+  grid.innerHTML = fields.map(f => `
+    <div class="detail-item">
+      <div class="detail-item-label">${f.label}</div>
+      <div class="detail-item-value" style="color: ${f.color ? `var(--${f.color})` : 'var(--text)'}; font-size: ${f.value.length > 6 ? '13px' : '16px'}">${f.value}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('detailPanel').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('show');
+}
+
+// ── 카카오맵 초기화 ──
+function initMap() {
+  if (typeof kakao === 'undefined' || CONFIG.KAKAO_KEY === 'YOUR_KAKAO_KEY') {
+    console.log('카카오맵 키 미설정 — 목업 UI만 표시');
+    return;
+  }
+
+  document.getElementById('apiNotice').style.display = 'none';
+
+  const container = document.getElementById('map');
+  const options = {
+    center: new kakao.maps.LatLng(37.5040, 127.0490),
+    level: 5,
+  };
+  map = new kakao.maps.Map(container, options);
+
+  getAllItems().forEach(item => addMarker(item));
+}
+
+function addMarker(item) {
+  if (!map) return;
+  const meta = TYPE_META[item.type];
+  const colorMap = { safe: '#00d4aa', warn: '#ffd93d', danger: '#ff6b6b' };
+
+  const content = `
+    <div style="
+      background:${colorMap[item.status]};
+      color:#0d1117;
+      border-radius:50%;
+      width:34px; height:34px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      cursor:pointer;
+    ">${meta.icon}</div>
+  `;
+
+  const overlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(item.lat, item.lng),
+    content,
+    zIndex: 3,
+  });
+  overlay.setMap(map);
+
+  overlay.getContent().addEventListener?.('click', () => showDetail(item));
+  markers.push(overlay);
+}
+
+// ── 공공데이터 API 호출 (실제 연동 시 사용) ──
+async function fetchTransportData() {
+  // 교통약자 이동지원 현황 실시간 정보
+  // https://www.data.go.kr/data/15140825/openapi.do
+  const url = `https://apis.data.go.kr/B552061/TransprtForDisabled/getTransprtForDisabledList?serviceKey=${CONFIG.DATA_API_KEY}&numOfRows=10&pageNo=1&_type=json`;
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    console.log('이동지원 데이터:', json);
+    // TODO: json 파싱 후 MOCK_DATA.transport 를 실제 데이터로 교체
+  } catch (e) {
+    console.warn('이동지원 API 오류 (목업 사용):', e);
+  }
+}
+
+async function fetchSignalData() {
+  // 교통안전 신호등 실시간 정보
+  // https://www.data.go.kr/data/15157604/openapi.do
+  const url = `https://apis.data.go.kr/B552061/TrafficSignal/getTrafficSignalList?serviceKey=${CONFIG.DATA_API_KEY}&numOfRows=10&pageNo=1&_type=json`;
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    console.log('신호등 데이터:', json);
+  } catch (e) {
+    console.warn('신호등 API 오류 (목업 사용):', e);
+  }
+}
+
+async function fetchBikeData() {
+  // 전국 공영자전거 실시간 정보
+  // https://www.data.go.kr/data/15126639/openapi.do
+  const url = `https://apis.data.go.kr/B552061/PublicBicycle/getPublicBicycleList?serviceKey=${CONFIG.DATA_API_KEY}&numOfRows=10&pageNo=1&_type=json`;
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    console.log('공영자전거 데이터:', json);
+  } catch (e) {
+    console.warn('공영자전거 API 오류 (목업 사용):', e);
+  }
+}
+
+// ── 실시간 갱신 (30초마다) ──
+function startPolling() {
+  if (CONFIG.DATA_API_KEY !== 'YOUR_DATA_API_KEY') {
+    fetchTransportData();
+    fetchSignalData();
+    fetchBikeData();
+    setInterval(() => {
+      fetchTransportData();
+      fetchSignalData();
+      fetchBikeData();
+    }, 30000);
+  }
+}
+
+// ── 검색 ──
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.card').forEach(card => {
+    const name = card.querySelector('.card-name')?.textContent.toLowerCase() || '';
+    card.style.display = name.includes(q) || q === '' ? 'block' : 'none';
+  });
+});
+
+// ── 초기화 ──
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hide');
+    renderCards();
+    initMap();
+    startPolling();
+  }, 2000);
+});
+</script>
+</body>
+</html>
