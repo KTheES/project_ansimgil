@@ -6,7 +6,7 @@
   <title>안심길 — 교통약자 안전지도</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <!-- Leaflet.js  -->
+  <!-- Leaflet.js — 무료 지도 (API 키 불필요) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -209,7 +209,7 @@
 
     .map-overlay {
       position: absolute; top: 16px; right: 16px;
-      display: flex; flex-direction: column; gap: 8px; z-index: 10;
+      display: flex; flex-direction: column; gap: 8px; z-index: 1000;
     }
     .overlay-card {
       background: rgba(22,27,34,0.92);
@@ -620,8 +620,8 @@ function initMap() {
   });
 
   // 다크 테마 타일
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO',
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(map);
 
