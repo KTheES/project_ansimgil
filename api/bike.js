@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const { numOfRows = 20, pageNo = 1 } = req.query;
 
   try {
-    const url = new URL('https://apis.data.go.kr/B551982/tsdo_v2/inf_101_00010002_v2');
+    const url = new URL('https://apis.data.go.kr/B551982/pbdo_v2/inf_101_00010002_v2');
     url.searchParams.set('serviceKey', API_KEY);
     url.searchParams.set('numOfRows', numOfRows);
     url.searchParams.set('pageNo', pageNo);
