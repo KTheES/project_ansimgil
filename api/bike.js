@@ -1,6 +1,5 @@
 // api/bike.js
-// 자치단체 공영자전거 대여소별 대여가능 자전거 현황
-// https://www.data.go.kr/data/15126639/openapi.do
+// 자치단체 공영자전거 대여가능 현황
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,13 +20,13 @@ export default async function handler(req, res) {
 
     let json;
     try { json = JSON.parse(text); }
-    catch { return res.status(500).json({ success: false, error: 'JSON 파싱 실패', raw: text }); }
+    catch { return res.status(200).json({ success: true, data: [], total: 0, debug: text.slice(0, 300) }); }
 
     const items = json?.response?.body?.items?.item ?? json?.items?.item ?? json?.item ?? [];
-    const arr = Array.isArray(items) ? items : [items];
+    const arr = Array.isArray(items) ? items : (items ? [items] : []);
 
     const parsed = arr.map(item => ({
-      id: item.rentSttnId ?? item.stationId ?? item.sn,
+      id: item.rentSttnId ?? item.stationId ?? Math.random(),
       name: item.rentSttnNm ?? item.stationNm ?? '자전거 스테이션',
       status: mapBikeStatus(item.rntPosblBicycleCnt, item.rackTotCnt),
       statusText: getBikeStatusText(item.rntPosblBicycleCnt, item.rackTotCnt),
@@ -40,7 +39,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ success: true, data: parsed, total: arr.length });
   } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
+    res.status(200).json({ success: true, data: [], total: 0, error: e.message });
   }
 }
 

@@ -6,22 +6,21 @@
   <title>안심길 — 교통약자 안전지도</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <!-- Leaflet.js — 무료 지도 (API 키 불필요) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface2: #21262d;
-      --border: #30363d;
-      --accent: #00d4aa;
-      --text: #e6edf3;
-      --text-muted: #7d8590;
-      --safe: #00d4aa;
-      --warn: #ffd93d;
-      --danger: #ff6b6b;
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface2: #f0f2f5;
+      --border: #e1e4e8;
+      --accent: #0ea47a;
+      --text: #1a1f2e;
+      --text-muted: #6b7280;
+      --safe: #0ea47a;
+      --warn: #d97706;
+      --danger: #dc2626;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -45,6 +44,7 @@
       border-bottom: 1px solid var(--border);
       z-index: 100;
       flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
     .logo { display: flex; align-items: center; gap: 10px; }
@@ -64,8 +64,8 @@
 
     .live-badge {
       display: flex; align-items: center; gap: 5px;
-      background: rgba(0,212,170,0.1);
-      border: 1px solid rgba(0,212,170,0.3);
+      background: rgba(14,164,122,0.1);
+      border: 1px solid rgba(14,164,122,0.3);
       border-radius: 20px; padding: 4px 10px;
       font-size: 11px; color: var(--accent);
       font-family: 'Space Mono', monospace;
@@ -82,13 +82,13 @@
 
     .main { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── 사이드바 ── */
     .sidebar {
       width: 360px;
       background: var(--surface);
       border-right: 1px solid var(--border);
       display: flex; flex-direction: column;
       overflow: hidden; flex-shrink: 0;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
     }
 
     .search-bar { padding: 14px 16px; border-bottom: 1px solid var(--border); }
@@ -128,7 +128,7 @@
       white-space: nowrap; transition: all 0.2s;
     }
     .tab-btn.active {
-      background: rgba(0,212,170,0.15);
+      background: rgba(14,164,122,0.1);
       border-color: var(--accent); color: var(--accent);
     }
     .tab-btn:hover:not(.active) {
@@ -150,10 +150,11 @@
     }
 
     .card {
-      background: var(--surface2); border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; padding: 14px;
       cursor: pointer; transition: all 0.2s;
       position: relative; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .card::before {
       content: ''; position: absolute;
@@ -163,7 +164,11 @@
     .card.safe::before { background: var(--safe); }
     .card.warn::before { background: var(--warn); }
     .card.danger::before { background: var(--danger); }
-    .card:hover { border-color: var(--accent); transform: translateX(2px); }
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateX(2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
 
     .card-header {
       display: flex; align-items: flex-start;
@@ -179,43 +184,36 @@
       font-size: 11px; font-weight: 500;
       padding: 2px 8px; border-radius: 10px;
     }
-    .status-badge.safe { background: rgba(0,212,170,0.15); color: var(--safe); }
-    .status-badge.warn { background: rgba(255,217,61,0.15); color: var(--warn); }
-    .status-badge.danger { background: rgba(255,107,107,0.15); color: var(--danger); }
+    .status-badge.safe { background: rgba(14,164,122,0.12); color: var(--safe); }
+    .status-badge.warn { background: rgba(217,119,6,0.12); color: var(--warn); }
+    .status-badge.danger { background: rgba(220,38,38,0.12); color: var(--danger); }
 
-    .card-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .card-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; color: var(--text); }
     .card-detail {
       font-size: 12px; color: var(--text-muted);
       display: flex; align-items: center; gap: 8px;
     }
 
     /* ── 지도 ── */
-    .map-wrap { flex: 1; position: relative; background: #0d1117; }
-    #map { width: 100%; height: 100%; background: #0d1117; }
-    /* Leaflet 다크 테마 보정 */
-    .leaflet-container { background: #0d1117 !important; }
+    .map-wrap { flex: 1; position: relative; }
+    #map { width: 100%; height: 100%; }
     .leaflet-control-zoom a {
-      background: #161b22 !important;
-      color: #e6edf3 !important;
-      border-color: #30363d !important;
+      background: #fff !important; color: #333 !important;
+      border-color: #ccc !important; font-weight: bold;
     }
-    .leaflet-control-zoom a:hover {
-      background: #21262d !important;
-    }
-    .leaflet-control-attribution {
-      background: rgba(13,17,23,0.8) !important;
-      color: #7d8590 !important;
-    }
+    .leaflet-control-zoom a:hover { background: #f4f4f4 !important; }
 
     .map-overlay {
       position: absolute; top: 16px; right: 16px;
-      display: flex; flex-direction: column; gap: 8px; z-index: 1000;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 1000; pointer-events: none;
     }
     .overlay-card {
-      background: rgba(22,27,34,0.92);
+      background: rgba(255,255,255,0.95);
       border: 1px solid var(--border);
       border-radius: 12px; padding: 12px 16px;
       backdrop-filter: blur(10px); min-width: 160px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
     .overlay-title {
       font-size: 11px; color: var(--text-muted);
@@ -237,15 +235,15 @@
       position: absolute; bottom: 20px; left: 50%;
       transform: translateX(-50%);
       display: flex; gap: 12px;
-      background: rgba(22,27,34,0.92);
+      background: rgba(255,255,255,0.95);
       border: 1px solid var(--border);
       border-radius: 30px; padding: 10px 20px;
-      backdrop-filter: blur(10px); z-index: 10;
+      backdrop-filter: blur(10px); z-index: 1000;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    /* ── 상세 패널 ── */
     .detail-panel {
       position: absolute; bottom: 70px; left: 50%;
       transform: translateX(-50%) translateY(20px);
@@ -253,9 +251,10 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px; padding: 20px;
-      backdrop-filter: blur(10px); z-index: 20;
+      backdrop-filter: blur(10px); z-index: 1000;
       opacity: 0; pointer-events: none;
       transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
     }
     .detail-panel.show {
       opacity: 1; pointer-events: all;
@@ -263,18 +262,17 @@
     }
     .detail-close {
       position: absolute; top: 14px; right: 14px;
-      background: var(--surface2); border: none;
+      background: var(--surface2); border: 1px solid var(--border);
       border-radius: 6px; color: var(--text-muted);
       cursor: pointer; padding: 4px 8px; font-size: 16px;
     }
-    .detail-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .detail-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
     .detail-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .detail-item { background: var(--surface2); border-radius: 10px; padding: 12px; }
+    .detail-item { background: var(--surface2); border-radius: 10px; padding: 12px; border: 1px solid var(--border); }
     .detail-item-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-    .detail-item-value { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; }
+    .detail-item-value { font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700; color: var(--text); }
 
-    /* ── 로딩 ── */
     .loading-overlay {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; flex-direction: column;
@@ -288,7 +286,6 @@
     @keyframes load { from { width:0; } to { width:100%; } }
     .loading-text { font-size: 13px; color: var(--text-muted); font-family: 'Space Mono', monospace; }
 
-    /* ── 에러/빈 상태 ── */
     .empty-state {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -324,7 +321,7 @@
 <div class="loading-overlay" id="loading">
   <div class="loading-logo">안심길</div>
   <div class="loading-bar"><div class="loading-progress"></div></div>
-  <div class="loading-text" id="loadingText">실시간 데이터 불러오는 중...</div>
+  <div class="loading-text">실시간 데이터 불러오는 중...</div>
 </div>
 
 <header>
@@ -349,26 +346,15 @@
         <input class="search-input" type="text" placeholder="동네, 주소 검색..." id="searchInput" />
       </div>
     </div>
-
     <div class="filter-tabs">
       <button class="tab-btn active" onclick="filterCards('all', this)">🗺️ 전체</button>
       <button class="tab-btn" onclick="filterCards('transport', this)">🦽 이동지원</button>
       <button class="tab-btn" onclick="filterCards('signal', this)">🚦 신호등</button>
       <button class="tab-btn" onclick="filterCards('bike', this)">🚲 공영자전거</button>
     </div>
-
     <div class="card-list" id="cardList">
-      <!-- 스켈레톤 로딩 -->
-      <div class="skeleton">
-        <div class="skeleton-line" style="width:40%"></div>
-        <div class="skeleton-line" style="width:80%"></div>
-        <div class="skeleton-line" style="width:60%"></div>
-      </div>
-      <div class="skeleton">
-        <div class="skeleton-line" style="width:35%"></div>
-        <div class="skeleton-line" style="width:75%"></div>
-        <div class="skeleton-line" style="width:50%"></div>
-      </div>
+      <div class="skeleton"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div>
+      <div class="skeleton"><div class="skeleton-line" style="width:35%"></div><div class="skeleton-line" style="width:75%"></div><div class="skeleton-line" style="width:50%"></div></div>
     </div>
   </aside>
 
@@ -379,40 +365,22 @@
       <div class="overlay-card">
         <div class="overlay-title">🦽 이동지원 차량</div>
         <div class="overlay-stats">
-          <div class="overlay-stat">
-            <div class="overlay-stat-num safe" id="statAvail">-</div>
-            <div class="overlay-stat-label">대기중</div>
-          </div>
-          <div class="overlay-stat">
-            <div class="overlay-stat-num warn" id="statRun">-</div>
-            <div class="overlay-stat-label">운행중</div>
-          </div>
+          <div class="overlay-stat"><div class="overlay-stat-num safe" id="statAvail">-</div><div class="overlay-stat-label">대기중</div></div>
+          <div class="overlay-stat"><div class="overlay-stat-num warn" id="statRun">-</div><div class="overlay-stat-label">운행중</div></div>
         </div>
       </div>
       <div class="overlay-card">
         <div class="overlay-title">🚦 신호등 안전</div>
         <div class="overlay-stats">
-          <div class="overlay-stat">
-            <div class="overlay-stat-num safe" id="statSafe">-</div>
-            <div class="overlay-stat-label">안전</div>
-          </div>
-          <div class="overlay-stat">
-            <div class="overlay-stat-num danger" id="statDanger">-</div>
-            <div class="overlay-stat-label">주의</div>
-          </div>
+          <div class="overlay-stat"><div class="overlay-stat-num safe" id="statSafe">-</div><div class="overlay-stat-label">안전</div></div>
+          <div class="overlay-stat"><div class="overlay-stat-num danger" id="statDanger">-</div><div class="overlay-stat-label">주의</div></div>
         </div>
       </div>
       <div class="overlay-card">
         <div class="overlay-title">🚲 공영자전거</div>
         <div class="overlay-stats">
-          <div class="overlay-stat">
-            <div class="overlay-stat-num safe" id="statBike">-</div>
-            <div class="overlay-stat-label">대여가능</div>
-          </div>
-          <div class="overlay-stat">
-            <div class="overlay-stat-num warn" id="statDock">-</div>
-            <div class="overlay-stat-label">반납가능</div>
-          </div>
+          <div class="overlay-stat"><div class="overlay-stat-num safe" id="statBike">-</div><div class="overlay-stat-label">대여가능</div></div>
+          <div class="overlay-stat"><div class="overlay-stat-num warn" id="statDock">-</div><div class="overlay-stat-label">반납가능</div></div>
         </div>
       </div>
     </div>
@@ -433,71 +401,44 @@
 </div>
 
 <script>
-// =============================================
-// 설정
-// =============================================
-const BASE_URL = ''; // Vercel 배포 후 비워두면 같은 도메인 /api/* 자동 호출
-
+const BASE_URL = '';
 const TYPE_META = {
   transport: { icon: '🦽', label: '이동지원 차량' },
   signal:    { icon: '🚦', label: '신호등' },
   bike:      { icon: '🚲', label: '공영자전거' },
 };
 
-// 전역 상태
 let allData = { transport: [], signal: [], bike: [] };
 let currentFilter = 'all';
 let map = null;
 let overlays = [];
 
-// =============================================
-// API 호출 (Vercel 서버리스 함수)
-// =============================================
 async function fetchAll() {
-  try {
-    const [transportRes, signalRes, bikeRes] = await Promise.allSettled([
-      fetch(`${BASE_URL}/api/transport?numOfRows=20`).then(r => r.json()),
-      fetch(`${BASE_URL}/api/signal?numOfRows=30`).then(r => r.json()),
-      fetch(`${BASE_URL}/api/bike?numOfRows=30`).then(r => r.json()),
-    ]);
+  const [t, s, b] = await Promise.allSettled([
+    fetch(`${BASE_URL}/api/transport?numOfRows=20`).then(r => r.json()),
+    fetch(`${BASE_URL}/api/signal?numOfRows=30`).then(r => r.json()),
+    fetch(`${BASE_URL}/api/bike?numOfRows=30`).then(r => r.json()),
+  ]);
+  if (t.status === 'fulfilled' && t.value.success) allData.transport = t.value.data;
+  if (s.status === 'fulfilled' && s.value.success) allData.signal = s.value.data;
+  if (b.status === 'fulfilled' && b.value.success) allData.bike = b.value.data;
 
-    if (transportRes.status === 'fulfilled' && transportRes.value.success) {
-      allData.transport = transportRes.value.data;
-    }
-    if (signalRes.status === 'fulfilled' && signalRes.value.success) {
-      allData.signal = signalRes.value.data;
-    }
-    if (bikeRes.status === 'fulfilled' && bikeRes.value.success) {
-      allData.bike = bikeRes.value.data;
-    }
-
-    updateStats();
-    renderCards(currentFilter);
-    updateMapMarkers();
-    updateTimestamp();
-  } catch (e) {
-    console.error('fetchAll error:', e);
-    showError();
-  }
+  updateStats();
+  renderCards(currentFilter);
+  updateMapMarkers();
+  updateTimestamp();
 }
 
-// =============================================
-// 통계 업데이트
-// =============================================
 function updateStats() {
   const t = allData.transport;
   document.getElementById('statAvail').textContent = t.filter(i => i.status === 'safe').length;
   document.getElementById('statRun').textContent   = t.filter(i => i.status === 'warn').length;
-
   const s = allData.signal;
   document.getElementById('statSafe').textContent   = s.filter(i => i.status === 'safe').length;
   document.getElementById('statDanger').textContent = s.filter(i => i.status === 'danger').length;
-
   const b = allData.bike;
-  const totalBike = b.reduce((sum, i) => sum + parseInt(i.detail1.replace(/[^0-9]/g,'')||0), 0);
-  const totalDock = b.reduce((sum, i) => sum + parseInt(i.detail2.replace(/[^0-9]/g,'')||0), 0);
-  document.getElementById('statBike').textContent = totalBike;
-  document.getElementById('statDock').textContent = totalDock;
+  document.getElementById('statBike').textContent = b.reduce((sum,i) => sum + parseInt(i.detail1.replace(/[^0-9]/g,'')||0), 0);
+  document.getElementById('statDock').textContent = b.length;
 }
 
 function updateTimestamp() {
@@ -506,23 +447,17 @@ function updateTimestamp() {
     `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 }
 
-// =============================================
-// 카드 렌더링
-// =============================================
 function renderCards(filter = 'all') {
   const list = document.getElementById('cardList');
   list.innerHTML = '';
   const sections = filter === 'all' ? ['transport', 'signal', 'bike'] : [filter];
-
   sections.forEach(type => {
     const items = allData[type];
     const meta = TYPE_META[type];
-
     const label = document.createElement('div');
     label.className = 'section-label';
     label.textContent = `${meta.icon} ${meta.label} (${items.length})`;
     list.appendChild(label);
-
     if (items.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
@@ -530,7 +465,6 @@ function renderCards(filter = 'all') {
       list.appendChild(empty);
       return;
     }
-
     items.forEach(item => {
       const card = document.createElement('div');
       card.className = `card ${item.status}`;
@@ -550,9 +484,7 @@ function renderCards(filter = 'all') {
       `;
       card.onclick = () => {
         showDetail(item);
-        if (map && item.lat && item.lng) {
-          map.setView([item.lat, item.lng], 15);
-        }
+        if (map && item.lat && item.lng) map.setView([item.lat, item.lng], 15);
       };
       list.appendChild(card);
     });
@@ -566,31 +498,27 @@ function filterCards(filter, btn) {
   renderCards(filter);
 }
 
-// =============================================
-// 상세 패널
-// =============================================
 function showDetail(item) {
   const meta = TYPE_META[item.type];
   document.getElementById('detailTitle').textContent = item.name;
   document.getElementById('detailSub').textContent = `${meta.icon} ${meta.label} · ${item.statusText}`;
-
   const fields = {
     transport: [
       { label: '차량 상태', value: item.statusText, color: item.status },
       { label: '상세 정보', value: item.detail1 },
-      { label: '대기 시간', value: item.detail2 },
+      { label: '대기 현황', value: item.detail2 },
       { label: '예약 가능', value: item.status === 'safe' ? '✅ 가능' : '❌ 불가', color: item.status === 'safe' ? 'safe' : 'danger' },
     ],
     signal: [
       { label: '신호등 상태', value: item.statusText, color: item.status },
       { label: '보행 신호', value: item.detail1 },
-      { label: '음향 신호', value: item.detail2 },
+      { label: '차량 신호', value: item.detail2 },
       { label: '위험도', value: { safe:'낮음', warn:'보통', danger:'높음' }[item.status], color: item.status },
     ],
     bike: [
       { label: '스테이션', value: item.statusText, color: item.status },
       { label: '대여 현황', value: item.detail1 },
-      { label: '반납 현황', value: item.detail2 },
+      { label: '거치대 현황', value: item.detail2 },
       { label: '접근성', value: '♿ 이용 가능', color: 'safe' },
     ],
   }[item.type];
@@ -598,10 +526,9 @@ function showDetail(item) {
   document.getElementById('detailGrid').innerHTML = fields.map(f => `
     <div class="detail-item">
       <div class="detail-item-label">${f.label}</div>
-      <div class="detail-item-value" style="color:${f.color ? `var(--${f.color})` : 'var(--text)'}; font-size:${f.value?.length > 8 ? '12px' : '16px'}">${f.value}</div>
+      <div class="detail-item-value" style="color:${f.color ? `var(--${f.color})` : 'var(--text)'}; font-size:${(f.value?.length||0) > 8 ? '12px' : '16px'}">${f.value}</div>
     </div>
   `).join('');
-
   document.getElementById('detailPanel').classList.add('show');
 }
 
@@ -609,22 +536,12 @@ function closeDetail() {
   document.getElementById('detailPanel').classList.remove('show');
 }
 
-// =============================================
-// Leaflet 지도 (API 키 불필요)
-// =============================================
 function initMap() {
-  map = L.map('map', {
-    center: [37.5040, 127.0490],
-    zoom: 12,
-    zoomControl: true,
-  });
-
-  // 다크 테마 타일
+  map = L.map('map', { center: [36.5, 127.5], zoom: 7, zoomControl: true });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(map);
-
   updateMapMarkers();
 }
 
@@ -632,40 +549,22 @@ function updateMapMarkers() {
   if (!map) return;
   overlays.forEach(o => o.remove());
   overlays = [];
-
-  const colorMap = { safe: '#00d4aa', warn: '#ffd93d', danger: '#ff6b6b' };
+  const colorMap = { safe: '#0ea47a', warn: '#d97706', danger: '#dc2626' };
   const allItems = [...allData.transport, ...allData.signal, ...allData.bike];
-
   allItems.forEach(item => {
     if (!item.lat || !item.lng) return;
     const meta = TYPE_META[item.type];
-
     const icon = L.divIcon({
       className: '',
-      html: `<div style="
-        background:${colorMap[item.status]};
-        color:#0d1117; border-radius:50%;
-        width:34px; height:34px;
-        display:flex; align-items:center; justify-content:center;
-        font-size:16px;
-        box-shadow:0 2px 8px rgba(0,0,0,0.5);
-        cursor:pointer;
-      ">${meta.icon}</div>`,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
+      html: `<div style="background:${colorMap[item.status]};color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.3);cursor:pointer;">${meta.icon}</div>`,
+      iconSize: [34, 34], iconAnchor: [17, 17],
     });
-
     const marker = L.marker([item.lat, item.lng], { icon })
-      .addTo(map)
-      .on('click', () => showDetail(item));
-
+      .addTo(map).on('click', () => showDetail(item));
     overlays.push(marker);
   });
 }
 
-// =============================================
-// 검색
-// =============================================
 document.getElementById('searchInput').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
   document.querySelectorAll('.card').forEach(card => {
@@ -674,31 +573,10 @@ document.getElementById('searchInput').addEventListener('input', e => {
   });
 });
 
-// =============================================
-// 에러 처리
-// =============================================
-function showError() {
-  const list = document.getElementById('cardList');
-  list.innerHTML = `
-    <div class="empty-state">
-      <div class="empty-icon">⚠️</div>
-      <div>데이터를 불러오지 못했어요<br><small>잠시 후 다시 시도됩니다</small></div>
-    </div>
-  `;
-}
-
-// =============================================
-// 초기화 & 폴링
-// =============================================
 window.addEventListener('load', async () => {
   await fetchAll();
   initMap();
-
-  setTimeout(() => {
-    document.getElementById('loading').classList.add('hide');
-  }, 2000);
-
-  // 30초마다 자동 갱신
+  setTimeout(() => document.getElementById('loading').classList.add('hide'), 2000);
   setInterval(fetchAll, 30_000);
 });
 </script>
