@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const API_KEY = process.env.DATA_API_KEY;
 
   try {
-    const url = new URL('https://apis.data.go.kr/B551982/tsdo_v2/tl_drct_info');
+    const url = new URL('https://apis.data.go.kr/B551982/rti/tl_drct_info');
     url.searchParams.set('serviceKey', API_KEY);
     url.searchParams.set('numOfRows', '3');
     url.searchParams.set('pageNo', '1');
