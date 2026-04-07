@@ -171,8 +171,9 @@
     }
 
     .card-header {
-      display: flex; align-items: flex-start;
+      display: flex; align-items: center;
       justify-content: space-between; margin-bottom: 8px;
+      gap: 8px;
     }
     .card-type { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
     .card-icon { font-size: 16px; }
@@ -187,6 +188,7 @@
     .status-badge {
       font-size: 11px; font-weight: 500;
       padding: 2px 8px; border-radius: 10px;
+      white-space: nowrap; flex-shrink: 0;
     }
     .status-badge.safe { background: rgba(14,164,122,0.12); color: var(--safe); }
     .status-badge.warn { background: rgba(217,119,6,0.12); color: var(--warn); }
